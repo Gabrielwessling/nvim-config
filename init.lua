@@ -443,6 +443,11 @@ do
   -- [[ mini.nvim ]]
   --  A collection of various small independent plugins/modules
   vim.pack.add { gh 'nvim-mini/mini.nvim' }
+  require('mini.tabline').setup()
+  require('mini.sessions').setup {
+    autoread = true,
+    autowrite = true,
+  }
 
   -- If a nerd font is available, load the icons module for pretty icons in various plugins.
   if vim.g.have_nerd_font then
@@ -745,7 +750,7 @@ do
     -- rust_analyzer = {},
 
     stylua = {}, -- Used to format Lua code
-
+    ts_ls = {},
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
       on_init = function(client)
@@ -1015,10 +1020,10 @@ do
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
-  -- require 'kickstart.plugins.neo-tree'
+  require 'kickstart.plugins.indent_line'
+  require 'kickstart.plugins.lint'
+  require 'kickstart.plugins.autopairs'
+  require 'kickstart.plugins.neo-tree'
 
   -- NOTE: You can add your own plugins, configuration, etc. in `lua/custom/plugins/*.lua`.
   --
@@ -1036,4 +1041,26 @@ do
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`
+require 'custom.plugins.codex'
 -- vim: ts=2 sts=2 sw=2 et
+
+vim.api.nvim_create_user_command('Fechar', function()
+  local buffer = vim.api.nvim_get_current_buf()
+
+  if vim.bo[buffer].buftype ~= '' then
+    vim.notify('Use este comando em uma janela de código.')
+    return
+  end
+
+  if vim.bo[buffer].modified then
+    vim.notify('Salve o arquivo antes de fechar.', vim.log.levels.WARN)
+    return
+  end
+
+  vim.cmd('enew')
+  vim.api.nvim_buf_delete(buffer, { force = false })
+end, { desc = 'Fechar arquivo mantendo buffer vazio' })
+
+vim.keymap.set('n', '<leader>bd', '<cmd>Fechar<CR>', {
+  desc = 'Fechar arquivo mantendo o painel',
+})
